@@ -42,7 +42,7 @@ The system evolves through different phases:
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/CardozoJavier/transactio
 cd transactio
 
 # Build the project
@@ -64,7 +64,6 @@ transactio/
 ├── docs/
 │   ├── architecture/
 │   └── sessions/
-├── docker/
 ├── scripts/
 ├── docker-compose.yml
 ├── Dockerfile
@@ -80,14 +79,14 @@ transactio/
 
 ## 🔄 Current Phase
 
-**Phase 1: Docker Basics** (In Progress)
+**Phase 1: Docker Basics** (Done)
 - Containerizing Spring Boot application
 - Setting up local development environment
 - Creating a base payment service
 
 ## 📝 Session Progress
 
-Latest session: [Date]
+Latest session: 04/05/2025
 - See [Session Notes](docs/sessions/) for detailed progress
 
 ## 🎓 Learning Goals
