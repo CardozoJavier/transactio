@@ -51,10 +51,10 @@ First, let's create a Spring Boot project structure.
 
 ```bash
 # From your project root
-mkdir -p src/main/java/com/transactio/payment/controller
-mkdir -p src/main/java/com/transactio/payment/service
-mkdir -p src/main/java/com/transactio/payment/model
-mkdir -p src/main/java/com/transactio/payment/repository
+mkdir -p src/main/java/com/transactio/controller
+mkdir -p src/main/java/com/transactio/service
+mkdir -p src/main/java/com/transactio/model
+mkdir -p src/main/java/com/transactio/repository
 ```
 
 Create `pom.xml`:
@@ -76,7 +76,7 @@ Create `pom.xml`:
     <artifactId>transactio</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <name>transactio</name>
-    <description>Payment Processing Service</description>
+    <description>Transactio Payment Processing Service</description>
 
     <properties>
         <java.version>21</java.version>
@@ -146,24 +146,42 @@ Create `Dockerfile` in project root:
 # Build stage
 FROM maven:3.9.6-amazoncorretto-21 AS builder
 WORKDIR /app
+
+# Copy pom.xml first to leverage Docker cache
 COPY pom.xml .
+
+# Download dependencies (this layer will be cached if pom.xml doesn't change)
 RUN mvn dependency:go-offline
+
+# Copy source code
 COPY src ./src
+
+# Build the application
 RUN mvn clean package -DskipTests
 
 # Runtime stage
 FROM amazoncorretto:21-alpine
 WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
 
 # Create non-root user for security
 RUN addgroup -S spring && adduser -S spring -G spring
+
+# Copy the jar from builder stage
+COPY --from=builder /app/target/*.jar app.jar
+
+# Change ownership of the app.jar to spring user
+RUN chown spring:spring app.jar
+
+# Switch to non-root user
 USER spring:spring
 
 # JVM memory settings for container environment
-ENV JAVA_OPTS="-Xms256m -Xmx512m"
+ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:MaxMetaspaceSize=128m"
 
+# Expose port
 EXPOSE 8080
+
+# Set the entrypoint
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 ```
 
@@ -171,23 +189,24 @@ ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 Create `docker-compose.yml`:
 ```yaml
-version: '3.8'
-
 services:
-  payment-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - JAVA_OPTS=-Xms256m -Xmx512m
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+   transactio:
+      build:
+         context: .
+         dockerfile: Dockerfile
+      container_name: transactio-payment-service
+      ports:
+         - "8080:8080"
+      environment:
+         - SPRING_PROFILES_ACTIVE=docker
+         - JAVA_OPTS=-Xms256m -Xmx512m -XX:MaxMetaspaceSize=128m
+      healthcheck:
+         test: ["CMD", "wget", "--spider", "http://localhost:8080/actuator/health"]
+         interval: 30s
+         timeout: 10s
+         retries: 3
+         start_period: 40s
+      restart: unless-stopped
 ```
 
 ## Next Steps
