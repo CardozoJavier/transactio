@@ -1,0 +1,43 @@
+# Docker Profile Configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  # Database Configuration (H2)
+  datasource:
+    url: jdbc:h2:mem:transactiodb;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ''
+
+  h2:
+    console:
+      enabled: true
+      settings:
+        web-allow-others: true
+
+  # Kafka Configuration for Docker
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.transactio.event"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: "com.transactio.event.PaymentEvent"
+      auto-offset-reset: earliest
+      group-id:
+        notification: notification-service-group
+    topic:
+      payment-events: payment-events
+
+# Server Configuration
+server:
+  port: 8080
