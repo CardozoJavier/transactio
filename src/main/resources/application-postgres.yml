@@ -16,7 +16,7 @@ spring:
     hibernate:
       # Change from 'update' to 'validate' since Flyway will handle schema creation
       ddl-auto: validate
-    show-sql: true
+    show-sql: false
     open-in-view: false
   
   # Flyway Configuration
