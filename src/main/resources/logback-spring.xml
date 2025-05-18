@@ -30,7 +30,17 @@
         <appender-ref ref="File" />
     </root>
 
+    <!-- Application logs -->
     <logger name="com.transactio" level="DEBUG"/>
+    
+    <!-- Framework logs -->
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.hibernate" level="WARN"/>
+    
+    <!-- Kafka client logs - suppress verbose configuration output -->
+    <logger name="org.apache.kafka.clients" level="WARN"/>
+    <logger name="org.apache.kafka.common.utils" level="WARN"/>
+    <logger name="org.apache.kafka.clients.consumer.ConsumerConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.producer.ProducerConfig" level="WARN"/>
+    <logger name="org.apache.kafka.clients.admin.AdminClientConfig" level="WARN"/>
 </configuration>
