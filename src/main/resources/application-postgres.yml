@@ -1,0 +1,74 @@
+spring:
+  # PostgreSQL Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:transactiodb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    # Connection Pool Settings
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      # Change from 'update' to 'validate' since Flyway will handle schema creation
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false
+  
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: public
+    validate-on-migrate: true
+    
+  # Kafka Configuration (when used with PostgreSQL)
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    properties:
+      # Client-level properties for version compatibility
+      api.version.request: true
+      allow.auto.create.topics: true
+      # Disable admin operations to prevent the unsupported API warning
+      auto.create.topics.enable: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.transactio.event"
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: "com.transactio.event.PaymentEvent"
+      auto-offset-reset: earliest
+      group-id:
+        notification: notification-service-group
+    topic:
+      payment-events: payment-events
+    # Disable admin client auto-configurations to prevent the warning
+    admin:
+      auto-create: false  
+      properties:
+        # Force API version negotiation
+        api.version.fallback.ms: 0
+    
+# Server settings
+server:
+  port: 8080
+
+# Logging settings for PostgreSQL
+logging:
+  level:
+    com.transactio: INFO
+    org.springframework: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: INFO
