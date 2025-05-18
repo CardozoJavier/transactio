@@ -1,4 +1,26 @@
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: transactio-postgres
+    environment:
+      POSTGRES_DB: transactiodb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /data/postgres
+    volumes:
+      - postgres-data:/data/postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - transactio-network
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
@@ -20,7 +42,6 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # Configure listeners for both internal and external communication
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
@@ -30,16 +51,29 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
     networks:
       - transactio-network
+      
+  # This service only starts when using the 'full' profile
   transactio:
+    profiles:
+      - full
     build:
       context: .
       dockerfile: Dockerfile
     container_name: transactio-payment-service
+    depends_on:
+      - postgres
+      - kafka
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_PROFILES_ACTIVE=postgres,docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+      # PostgreSQL connection variables
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=transactiodb
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
       - JAVA_OPTS=-Xms256m -Xmx512m -XX:MaxMetaspaceSize=128m
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:8080/actuator/health"]
@@ -47,9 +81,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
     networks:
       - transactio-network
 
 networks:
   transactio-network:
     driver: bridge
+
+volumes:
+  postgres-data:
