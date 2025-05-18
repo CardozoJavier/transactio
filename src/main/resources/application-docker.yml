@@ -4,18 +4,8 @@ spring:
     activate:
       on-profile: docker
 
-  # Database Configuration (H2)
-  datasource:
-    url: jdbc:h2:mem:transactiodb;DB_CLOSE_DELAY=-1
-    driverClassName: org.h2.Driver
-    username: sa
-    password: ''
-
-  h2:
-    console:
-      enabled: true
-      settings:
-        web-allow-others: true
+  # Docker-specific configuration
+  # No database configuration here - this comes from the postgres profile
 
   # Kafka Configuration for Docker
   kafka:
