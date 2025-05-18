@@ -67,8 +67,14 @@ server:
 # Logging settings for PostgreSQL
 logging:
   level:
-    com.transactio: INFO
+    com.transactio: DEBUG
     org.springframework: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     org.flywaydb: INFO
+    # Suppress verbose Kafka logs
+    org.apache.kafka.clients: WARN
+    org.apache.kafka.common.utils: WARN
+    org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+    org.apache.kafka.clients.producer.ProducerConfig: WARN
+    org.apache.kafka.clients.admin.AdminClientConfig: WARN

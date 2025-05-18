@@ -31,3 +31,13 @@ spring:
 # Server Configuration
 server:
   port: 8080
+
+# Logging settings for Docker
+logging:
+  level:
+    # Suppress verbose Kafka logs
+    org.apache.kafka.clients: WARN
+    org.apache.kafka.common.utils: WARN
+    org.apache.kafka.clients.consumer.ConsumerConfig: WARN
+    org.apache.kafka.clients.producer.ProducerConfig: WARN
+    org.apache.kafka.clients.admin.AdminClientConfig: WARN
